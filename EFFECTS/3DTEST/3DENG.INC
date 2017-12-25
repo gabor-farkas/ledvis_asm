@@ -1,0 +1,7 @@
+extern	_core3d_init,_core3d_dest,_bufferconvert
+extern	_vectordotproduct,_transformvertices,_nullmatrix,_identitymatrix
+extern	_rotationXmatrix,_matrixtransp,_matrixmultiply,_translationmatrix
+extern	_projectionmatrix,_rotationYmatrix,_rotationZmatrix
+extern	_normalizevertices
+extern	_drawface,df_scrbuf,df_faces,df_vertices,df_lightdir,df_fnormals
+extern	df_Zbuffer,_df_clrzbuffer,df_texture,df_texcoords

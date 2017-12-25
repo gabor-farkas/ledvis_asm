@@ -1,0 +1,352 @@
+;%DEFINE FASTMODE
+;%DEFINE FASTESTMASS
+[segment codeseg]
+[bits 32]
+%macro sync 0
+       call _sync
+%endmacro
+%macro stephandler 1
+	mov eax,%1
+	call _addstep
+%endmacro
+%macro screenhandler 1
+	mov eax,%1
+	call _addscreen
+%endmacro
+%macro countdown 1
+	mov eax,%1		; parameter can be memory reference this way
+	mov [cd_counter],eax
+	mov eax,%%1
+	mov [my_sp],esp
+	mov esp,[outer_stack]
+	jmp [back_address]
+%%1:	mov [back_address],eax
+	mov [outer_stack],esp
+	mov esp,[my_sp]
+%endmacro
+%macro initiate 1
+	call _%1_initialize
+	stephandler _%1_step
+	screenhandler _%1_render
+%endmacro
+%macro dest 1
+	mov eax,_%1_step
+	call _removstep
+	mov eax,_%1_render
+	call _removscreen
+	call _%1_destroy
+%endmacro
+
+%macro scrollszoveg 2	;szoveg, sideffect num
+	mov dword [scroll_szovegaddr],%1
+	se %2
+	initiate scroll
+	initiate se
+%ifdef FASTMODE
+	countdown 30
+%else
+	countdown [scroll_numframes]
+%endif
+	dest se
+	dest scroll
+%endmacro
+
+%macro scrollsracname 2
+	mov eax,%1
+	imul eax,byte sd_size
+	mov eax,[sracok_desc+eax]
+	scrollszoveg eax,%2
+%endmacro
+
+%macro showfej 1
+	mov dword [animname],%1
+	initiate animplay
+	mov eax,[animframes]
+%ifdef FASTMODE
+	countdown 5
+%else
+	countdown [eax]
+	initiate fade
+	countdown 64
+	dest fade
+%endif
+	dest animplay
+%endmacro
+
+%macro showsracfej 1
+	mov eax,%1
+	mov ebx,sd_size
+	mul ebx
+	mov eax,[sracok_desc+eax+8]
+	showfej eax
+%endmacro
+
+%macro nwp 2
+	mov dword [nwp_effect],%1
+%ifdef FASTMODE
+	mov al,8
+%else
+	mov al,%2
+%endif
+	initiate nwp
+	countdown [nwp_numframes]
+	dest nwp
+%endmacro
+
+%macro film 2
+	mov dword [film_animname],%1
+	mov dword [film_string],%2
+	initiate film
+	mov eax,[film_numframes]
+	sub eax,64
+	countdown eax
+	initiate fade
+	countdown 64
+	dest fade
+	dest film
+%endmacro
+%macro	se	1
+	mov eax,[peftab+4*%1]
+	mov [se_pef],eax
+	mov eax,[imftab+4*%1]
+	mov [se_imf],eax
+%endmacro
+
+; nagybetus betunkenti effekt minden sracra + animok
+%macro	mass_nwp	0
+	xor eax,eax
+	mov [nw_cnt],eax
+%%1:	mov eax,[nw_cnt]
+	mov ebx,sd_size
+	mul ebx
+	mov eax,[sracok_desc+eax+4]
+	mov [nwp_stringofs],eax
+	mov eax,[nwp_numeffects]
+	call _random
+	mov bl,byte [nwp_params+eax]
+	mov eax,[nwp_effects+4*eax]
+	nwp eax,bl
+	sync
+	showsracfej [nw_cnt]
+	sync
+	inc dword [nw_cnt]
+	cmp dword [nw_cnt],nwp_cnt_max
+	jc %%1
+%endmacro
+
+; kisbetus scroll minden sracra + animok
+%macro	mass_scroll	0
+	xor eax,eax
+	mov [nw_cnt],eax
+%%1:	mov eax,[se_num_effects]
+	call _random
+	mov edx,eax
+	scrollsracname [nw_cnt],edx
+	sync
+	showsracfej [nw_cnt]
+	sync
+	inc dword [nw_cnt]
+	cmp dword [nw_cnt],nwp_cnt_max
+	jc %%1
+%endmacro
+
+_mass_nwp:
+		mass_nwp
+		ret
+_mass_scroll:
+		mass_scroll
+		ret
+
+_scroll_valami:
+		mov eax,[szovegek+4]
+		call _rnd2
+		mov esi,szovegtab
+	.svl1:	cmp eax,[esi+4]
+		jc near .svnem
+		cmp eax,[esi+8]
+		ja near .svnem
+		mov eax,[se_num_effects]
+		call _random
+		mov edx,[esi]
+%ifdef FASTMODE
+		add edx,byte 10
+%endif
+		mov ebx,eax
+		scrollszoveg edx,ebx
+		jmp .svend
+	.svnem:	add esi,byte 12
+		jmp .svl1
+	.svend:
+		ret
+_kukac:
+		initiate kukac
+%ifdef FASTMODE
+		countdown 48
+%else
+		countdown 120*FPS
+%endif
+		dest kukac
+		ret
+
+_matrix:
+		initiate falling
+%ifdef FASTMODE
+		countdown 10
+%else
+		countdown 11*FPS
+%endif
+		dest falling
+		ret
+
+_fuck:
+		scrollszoveg sz0,2
+		ret
+
+;-----------------------------
+;----------------------------- default entry point!
+_script:
+			mov [back_address],eax
+			mov [outer_stack],esp
+			mov esp,[scriptstack]
+			add esp,SSsize-4
+
+;			showsracfej 2
+
+			jmp _finalscript
+
+;			showfej an1
+;			showfej an5
+;			showfej an4
+;			showfej an2
+;			showfej an1
+;
+;			jmp _script
+
+
+;			initiate falling
+;			countdown 11*FPS
+;
+;			dest falling
+			;-----------
+_script0:
+
+;			initiate kukac
+;			countdown 300*FPS
+;			dest kukac
+
+;			initiate pacfade
+;			countdown [pf_numframes]
+;			dest pacfade
+
+;			scrollszoveg tanarakmeg,0
+
+			mass_scroll
+
+;			mass_nwp
+;			mov eax,[sracok_desc+0*12+4]
+;			mov dword [nwp_stringofs],eax
+;			nwp _ptab,2
+;			showsracfej 20
+
+;			showfej an7
+;			scrollszoveg sz0,2
+
+;			film an2,ss2U
+;			film an1,ss1U
+
+;			initiate d3t
+;			countdown 30*FPS
+;			dest d3t
+
+;			scrollsracname 4
+;			mov dword [nwp_stringofs],ss1
+;			nwp _nwpzoom,3
+;			nwp _horlines,3
+;			nwp _vertbars,4
+;			nwp _horzscrl,5
+;			nwp _fadecr,5
+;			nwp _fadebl,5
+;			showfej an1
+;			mov dword [nwp_stringofs],ss2
+;			nwp _horlines,3
+;			showfej an2
+;			scrollszoveg ss1
+;			showfej an1
+;			scrollszoveg ss2
+;			showfej an2
+
+			jmp _script0
+
+_finalscript:
+
+;                  call _kukac
+
+			call _matrix
+
+			scrollszoveg sz0,2
+			call _mass_nwp
+
+_finalbody:
+                        sync
+			;-- call some function randomly
+			mov eax,[functions+4]
+			call _rnd2
+			;- find it
+			mov esi,functab
+			xor bl,bl
+	.fbl1:		cmp eax,[esi+4]
+			jc .fbnemez
+			cmp eax,[esi+8]
+			ja .fbnemez
+			cmp bl,[ezvolt]
+			jz _finalbody		;megint ne
+			mov [ezvolt],bl
+			call [esi]
+			jmp .fbl1end
+	.fbnemez:	add esi,byte 12
+			inc bl
+			jmp .fbl1	; no check . . .
+.fbl1end:
+			jmp _finalbody
+
+[segment dataseg]
+ss0			db	'   Adam 0    ',0
+ss1			db	' Újfaludi András ',0
+ss1U			db	' ÚJFALUDI ANDRÁS ',0
+ss2			db	' Földi István ',0
+ss2U			db	' FÖLDI ISTVÁN ',0
+ss3			db	'   Ordas    ',0
+an0			db	'Adam0',0
+an1			db	'Umbi0',0
+an2			db	'Mazsy',0
+an3			db	'Ordas',0
+an4			db	'Feri',0
+an5			db	'Oszi',0
+an6			db	'Juhi',0
+an7			db	'Csizma',0
+sz0	db	'      Újpesti Két Tanítási Nyelvû Mûszaki Szakközépiskola és Gimnázium, 1998-2003, 13.H, osztályfõnök: Fekete Katalin        ',0
+%include	"..\string.scr"
+[segment dataseg]
+nw_cnt			dd	0
+functions		dd	5,340
+functab			dd	_mass_nwp,0,79
+			dd	_mass_scroll,80,159
+			dd	_scroll_valami,160,299
+			dd	_kukac,300,309
+			dd	_matrix,310,339
+ezvolt			db	-1
+szovegek		dd	4,340
+szovegtab		dd	sz0,0,99
+			dd	tanarnevek,100,199
+			dd	tanarakmeg,200,299
+			dd	authorstring,300,339
+back_address		dd	0
+outer_stack		dd	0
+my_sp			dd	0
+%ifdef FASTESTMASS
+nwp_cnt_max		equ	1
+%else
+nwp_cnt_max		equ	27
+%endif
+
+copyright		db	'Copyright (c) Farkas Gabor 2003,2004, all rights reserved',000

@@ -1,0 +1,63 @@
+numchars	equ	10
+matrixchars
+	db	0,0,0,0,0
+
+	db	01110b
+	db	10001b
+	db	10001b
+	db	10001b
+	db	01110b
+
+	db	00100b
+	db	01100b
+	db	00100b
+	db	00100b
+	db	00100b
+
+	db	01110b
+	db	10001b
+	db	00010b
+	db	01100b
+	db	11111b
+
+	db	11110b
+	db	00001b
+	db	00010b
+	db	00001b
+	db	11110b
+
+	db	01000b
+	db	01000b
+	db	01111b
+	db	00010b
+	db	00010b
+
+	db	11111b
+	db	10000b
+	db	11110b
+	db	00001b
+	db	11110b
+
+	db	01110b
+	db	10000b
+	db	11110b
+	db	10001b
+	db	01110b
+
+	db	11111b
+	db	00010b
+	db	00100b
+	db	01000b
+	db	10000b
+
+	db	01110b
+	db	10001b
+	db	01110b
+	db	10001b
+	db	01110b
+
+	db	01110b
+	db	10001b
+	db	01111b
+	db	00001b
+	db	01110b

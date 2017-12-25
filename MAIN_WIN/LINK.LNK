@@ -1,0 +1,26 @@
+/dll
+	main_win
+	crtdll.lib
+	user32.lib
+	..\template\templ_32
+	..\effects\animplay\animp_32
+	..\effects\matrix\matrix32
+	..\effects\random\random32
+	..\effects\scroll\scroll32
+	..\effects\nw_pixel\nwp32
+	..\effects\names\names32
+	..\effects\3dcore\3dcore32
+	..\effects\3dtest\3dtest32
+	..\effects\film\film32
+	..\effects\fade\fade32
+	..\effects\se\se32
+	..\effects\kukac\kukac32
+	..\effects\pacfade\pacf32
+	..\font\font32
+	..\scrplay\scrpl_32
+	..\lzw\lzw32
+	/export:main_initialize
+	/export:main_destroy
+	/export:matrixaddr
+	/export:main_step
+	/export:main_render

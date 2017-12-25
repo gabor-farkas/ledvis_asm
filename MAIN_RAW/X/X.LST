@@ -1,0 +1,41 @@
+Turbo Assembler	 Version 2.0	    03/08/08 19:24:42	    Page 1
+x.asm
+
+
+
+      1				     pgroup  group   realseg
+      2
+      3	0000			     realseg segment para public use16
+      4					     assume cs:pgroup, ds:pgroup
+      5
+      6	0000			     start:
+      7
+      8	0000  B8 0000s				     mov ax,pgroup
+      9
+     10	0003  C3				     ret
+     11
+     12	0004			     realseg	     ends
+     13						     end
+Turbo Assembler	 Version 2.0	    03/08/08 19:24:42	    Page 2
+Symbol Table
+
+
+
+
+Symbol Name			  Type	 Value
+
+??DATE				  Text	 "03/08/08"
+??FILENAME			  Text	 "x	  "
+??TIME				  Text	 "19:24:42"
+??VERSION			  Number 0200
+@CPU				  Text	 0101H
+@CURSEG				  Text	 REALSEG
+@FILENAME			  Text	 X
+@WORDSIZE			  Text	 2
+START				  Near	 REALSEG:0000
+
+Groups & Segments		  Bit Size Align  Combine Class
+
+PGROUP				  Group
+  REALSEG			  16  0004 Para	  Public
+
